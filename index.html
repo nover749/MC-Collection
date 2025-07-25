@@ -1,86 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>CAPTCHA Wall</title>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <meta charset="UTF-8" />
+  <title>100 reCAPTCHA Checkboxes</title>
+  <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
   <style>
     body {
-      background-color: #121212;
+      background: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 40px;
-      padding: 50px 20px;
-    }
-
-    .captcha-box {
-      background: #1e1e1e;
-      padding: 30px;
-      border-radius: 10px;
-      border: 1px solid #333;
-      box-shadow: 0 0 10px #000;
-    }
-
-    .g-recaptcha,
-    .g-recaptcha-button {
-      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
       justify-content: center;
     }
-
-    .submit-btn {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
+    .captcha-box {
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #000;
+      width: 320px;
+      height: 110px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
     }
   </style>
 </head>
 <body>
 
-  <!-- reCAPTCHA Checkbox -->
-  <div class="captcha-box">
-    <form action="#" method="POST">
-      <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
-    </form>
-  </div>
-
-  <!-- Invisible reCAPTCHA (wait & verify) -->
-  <div class="captcha-box">
-    <form action="#" method="POST">
-      <button 
-        class="g-recaptcha submit-btn"
-        data-sitekey="YOUR_SITE_KEY_HERE"
-        data-callback="onSubmit"
-        data-size="invisible">
-        Verify
-      </button>
-    </form>
-  </div>
-
-  <!-- Explicit JS-rendered CAPTCHA (clean block) -->
-  <div class="captcha-box">
-    <div id="explicit-captcha"></div>
-  </div>
-
   <script>
-    function onSubmit(token) {
-      // No actual submission — just demo
-      alert("Verified!");
+    const siteKey = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'; // Google test key
+    const total = 100;
+
+    // Create containers
+    for(let i=1; i <= total; i++) {
+      const div = document.createElement('div');
+      div.className = 'captcha-box';
+      div.id = 'recaptcha_' + i;
+      document.body.appendChild(div);
     }
 
-    // Render reCAPTCHA programmatically
-    var onloadCallback = function () {
-      grecaptcha.render('explicit-captcha', {
-        'sitekey': 'YOUR_SITE_KEY_HERE'
-      });
-    };
+    // Render all captchas after API loads
+    function onloadCallback() {
+      for(let i=1; i <= total; i++) {
+        grecaptcha.render('recaptcha_' + i, {
+          'sitekey': siteKey
+        });
+      }
+    }
   </script>
-  <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 
 </body>
 </html>
