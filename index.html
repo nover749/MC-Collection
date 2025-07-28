@@ -9,9 +9,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="HackEx UI" />
-<link rel="apple-touch-icon" href="icon-192.png" />
+<!-- Hacker mask icon for Add to Home Screen -->
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" />
 
-<!-- Web App Manifest -->
+<!-- Web App Manifest (if you want PWA features, optional) -->
 <link rel="manifest" href="manifest.json" />
 
 <style>
@@ -23,7 +24,7 @@
         font-family: Arial, sans-serif;
         background: linear-gradient(135deg, #101010, #1a1a1a);
         color: white;
-        overflow: hidden; /* stop scroll */
+        overflow: hidden;
     }
     .page {
         display: none;
@@ -95,7 +96,6 @@
     .log { background: #444; }
     .apps { background: linear-gradient(135deg, orange, red, purple, cyan); }
     .device { background: #00aaff; }
-    .wallet { background: #0099ff; }
     .label { font-size: 14px; font-weight: bold; }
     /* Bank Page */
     .bank-page { background: #111; }
@@ -130,54 +130,6 @@
         font-size: 16px;
     }
     .back-btn:hover { background: #0088cc; }
-    .pnt-transaction {
-        margin-top: 10px;
-        background: #222;
-        padding: 12px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .pnt-transaction input[type="number"] {
-        flex: 1;
-        padding: 8px;
-        border-radius: 6px;
-        border: none;
-        font-size: 16px;
-        color: black;
-        min-width: 0;
-    }
-    .pnt-transaction button {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 14px;
-        transition: background-color 0.3s;
-        white-space: nowrap;
-    }
-    .deposit-btn {
-        background-color: #0a0;
-        color: white;
-    }
-    .deposit-btn:hover {
-        background-color: #070;
-    }
-    .withdraw-btn {
-        background-color: #a00;
-        color: white;
-    }
-    .withdraw-btn:hover {
-        background-color: #700;
-    }
-    .error-msg {
-        color: #ff5555;
-        margin-top: 8px;
-        font-size: 14px;
-        min-height: 18px;
-    }
 </style>
 </head>
 <body>
@@ -201,7 +153,7 @@
             <div class="label">Scan</div>
         </div>
         <div class="app" onclick="openPage('bank')">
-            <div class="icon bank">PNT</div>
+            <div class="icon bank">🕶️</div>
             <div class="label">Bank Account</div>
         </div>
         <div class="app" onclick="openPage('store')">
@@ -224,10 +176,6 @@
             <div class="icon device">📱</div>
             <div class="label">My Device</div>
         </div>
-        <div class="app" onclick="openPage('pnt-wallet')">
-            <div class="icon wallet">₱</div>
-            <div class="label">PNT Wallet</div>
-        </div>
     </div>
 </div>
 
@@ -247,126 +195,24 @@
             <div class="crypto-name">Ethereum (ETH)</div>
             <div class="crypto-balance">Balance: 12.7 ETH</div>
         </div>
-        <div class="crypto-card">
-            <div class="crypto-name">PNT Coin</div>
-            <div class="crypto-balance" id="pnt-balance-bank">Balance: 4521.00 PNT</div>
-        </div>
-    </div>
-    <button class="back-btn" onclick="openPage('home')">← Back</button>
-</div>
-
-<!-- PNT Wallet Page -->
-<div id="pnt-wallet" class="page bank-page">
-    <div class="status-bar">
-        <div>💰 PNT Wallet</div>
-        <div>10:36</div>
-    </div>
-    <div class="bank-header">Manage PNT Coin</div>
-    <div class="crypto-card" style="margin: 0 20px;">
-        <div class="crypto-name">PNT Coin</div>
-        <div class="crypto-balance" id="pnt-balance-wallet">Balance: 4521.00 PNT</div>
-        <div class="pnt-transaction">
-            <input type="number" id="pnt-amount" min="0" step="0.01" placeholder="Enter amount" />
-            <button class="deposit-btn" onclick="depositPNT()">Deposit</button>
-            <button class="withdraw-btn" onclick="withdrawPNT()">Withdraw</button>
-        </div>
-        <div class="error-msg" id="pnt-error"></div>
     </div>
     <button class="back-btn" onclick="openPage('home')">← Back</button>
 </div>
 
 <!-- Other Pages -->
-<div id="processes" class="page">
-    <div class="status-bar"><div>⚙️ Processes</div><div>10:36</div></div>
-    <h2 style="text-align:center;">Processes Running</h2>
-    <button class="back-btn" onclick="openPage('home')">← Back</button>
-</div>
-<div id="scan" class="page">
-    <div class="status-bar"><div>📡 Scan</div><div>10:36</div></div>
-    <h2 style="text-align:center;">Scanning...</h2>
-    <button class="back-btn" onclick="openPage('home')">← Back</button>
-</div>
-<div id="store" class="page">
-    <div class="status-bar"><div>🛒 Store</div><div>10:36</div></div>
-    <h2 style="text-align:center;">App Store</h2>
-    <button class="back-btn" onclick="openPage('home')">← Back</button>
-</div>
-<div id="messages" class="page">
-    <div class="status-bar"><div>✉️ Messages</div><div>10:36</div></div>
-    <h2 style="text-align:center;">Inbox</h2>
-    <button class="back-btn" onclick="openPage('home')">← Back</button>
-</div>
-<div id="log" class="page">
-    <div class="status-bar"><div>>_ Log</div><div>10:36</div></div>
-    <h2 style="text-align:center;">System Log</h2>
-    <button class="back-btn" onclick="openPage('home')">← Back</button>
-</div>
-<div id="apps" class="page">
-    <div class="status-bar"><div>⬛ Apps</div><div>10:36</div></div>
-    <h2 style="text-align:center;">Installed Apps</h2>
-    <button class="back-btn" onclick="openPage('home')">← Back</button>
-</div>
-<div id="device" class="page">
-    <div class="status-bar"><div>📱 My Device</div><div>10:36</div></div>
-    <h2 style="text-align:center;">Device Settings</h2>
-    <button class="back-btn" onclick="openPage('home')">← Back</button>
-</div>
+<div id="processes" class="page"><div class="status-bar"><div>⚙️ Processes</div><div>10:36</div></div><h2 style="text-align:center;">Processes Running</h2><button class="back-btn" onclick="openPage('home')">← Back</button></div>
+<div id="scan" class="page"><div class="status-bar"><div>📡 Scan</div><div>10:36</div></div><h2 style="text-align:center;">Scanning...</h2><button class="back-btn" onclick="openPage('home')">← Back</button></div>
+<div id="store" class="page"><div class="status-bar"><div>🛒 Store</div><div>10:36</div></div><h2 style="text-align:center;">App Store</h2><button class="back-btn" onclick="openPage('home')">← Back</button></div>
+<div id="messages" class="page"><div class="status-bar"><div>✉️ Messages</div><div>10:36</div></div><h2 style="text-align:center;">Inbox</h2><button class="back-btn" onclick="openPage('home')">← Back</button></div>
+<div id="log" class="page"><div class="status-bar"><div>>_ Log</div><div>10:36</div></div><h2 style="text-align:center;">System Log</h2><button class="back-btn" onclick="openPage('home')">← Back</button></div>
+<div id="apps" class="page"><div class="status-bar"><div>⬛ Apps</div><div>10:36</div></div><h2 style="text-align:center;">Installed Apps</h2><button class="back-btn" onclick="openPage('home')">← Back</button></div>
+<div id="device" class="page"><div class="status-bar"><div>📱 My Device</div><div>10:36</div></div><h2 style="text-align:center;">Device Settings</h2><button class="back-btn" onclick="openPage('home')">← Back</button></div>
 
 <script>
-let pntBalance = 4521.00;
-
 function openPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
-    clearError();
-    clearInput();
 }
-
-function updateBalance() {
-    document.getElementById('pnt-balance-bank').textContent = `Balance: ${pntBalance.toFixed(2)} PNT`;
-    document.getElementById('pnt-balance-wallet').textContent = `Balance: ${pntBalance.toFixed(2)} PNT`;
-}
-
-function clearError() {
-    document.getElementById('pnt-error').textContent = '';
-}
-
-function clearInput() {
-    document.getElementById('pnt-amount').value = '';
-}
-
-function depositPNT() {
-    clearError();
-    const amountInput = document.getElementById('pnt-amount');
-    const amount = parseFloat(amountInput.value);
-    if (isNaN(amount) || amount <= 0) {
-        document.getElementById('pnt-error').textContent = 'Enter a valid amount > 0 to deposit.';
-        return;
-    }
-    pntBalance += amount;
-    updateBalance();
-    clearInput();
-}
-
-function withdrawPNT() {
-    clearError();
-    const amountInput = document.getElementById('pnt-amount');
-    const amount = parseFloat(amountInput.value);
-    if (isNaN(amount) || amount <= 0) {
-        document.getElementById('pnt-error').textContent = 'Enter a valid amount > 0 to withdraw.';
-        return;
-    }
-    if (amount > pntBalance) {
-        document.getElementById('pnt-error').textContent = 'Insufficient balance to withdraw that amount.';
-        return;
-    }
-    pntBalance -= amount;
-    updateBalance();
-    clearInput();
-}
-
-// Initialize display on load
-updateBalance();
 </script>
 
 </body>
