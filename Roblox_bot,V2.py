@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.expected_conditions import any_of
 from selenium.webdriver import ActionChains
+from selenium.common.exceptions import ElementClickInterceptedException
 from webdriver_manager.chrome import ChromeDriverManager
 
 def setup_driver(headless=True):
@@ -58,27 +59,27 @@ def wait_for_login(driver, timeout=30):
 def friend_user(driver, user_id):
     try:
         driver.get(f"https://www.roblox.com/users/{user_id}/profile")
-        WebDriverWait(driver, 10).until(
+        add_button = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, "friend-button"))
         )
-        add_button = driver.find_element(By.ID, "friend-button")
-
         driver.execute_script("arguments[0].scrollIntoView({block:'center'});", add_button)
         
-        WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.ID, "friend-button"))
-        )
-
-        actions = ActionChains(driver)
-        actions.move_to_element(add_button).pause(0.5).click().perform()
-
-        print(f"✅ Clicked 'Add Connection' button for user ID {user_id}.")
-
+        # Retry clicking Add Connection button
+        for attempt in range(3):
+            try:
+                actions = ActionChains(driver)
+                actions.move_to_element(add_button).pause(0.5).click().perform()
+                print(f"✅ Clicked 'Add Connection' button for user ID {user_id}.")
+                break
+            except ElementClickInterceptedException:
+                print(f"⚠️ Attempt {attempt+1}/3 failed to click Add Connection button, retrying...")
+                time.sleep(0.5)
+        
     except Exception as e:
-        print(f"⚠️ Could not click 'Add Connection' button. Error: {e}")
+        print(f"⚠️ Could not click 'Add Connection' button at all. Error: {e}")
 
 def main():
-    user_to_friend_id = "7706679074"
+    user_to_friend_id = "2045998620"  # Change or make dynamic if needed
     username = generate_username()
     password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
 
@@ -95,6 +96,27 @@ def main():
         driver.find_element(By.NAME, "birthdayDay").send_keys("1")
         driver.find_element(By.NAME, "birthdayYear").send_keys("2000")
         driver.find_element(By.ID, "MaleButton").click()  # or "FemaleButton"
+
+        # Robust checkbox click with retries and JS fallback
+        checkbox_clicked = False
+        for _ in range(10):  # retry for ~10 seconds
+            try:
+                tos_checkbox = driver.find_element(By.ID, "signup-checkbox")
+                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", tos_checkbox)
+                try:
+                    actions = ActionChains(driver)
+                    actions.move_to_element(tos_checkbox).pause(0.5).click().perform()
+                    print("✔️ Clicked 'I agree' checkbox via ActionChains.")
+                except:
+                    driver.execute_script("arguments[0].click();", tos_checkbox)
+                    print("✔️ Clicked 'I agree' checkbox via JS fallback.")
+                checkbox_clicked = True
+                break
+            except:
+                time.sleep(1)
+
+        if not checkbox_clicked:
+            print("ℹ️ 'I agree' checkbox not detected, continuing...")
 
         # Click Sign Up button automatically
         try:
