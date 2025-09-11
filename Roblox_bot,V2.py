@@ -39,7 +39,6 @@ def generate_username():
             print(f"Username {username} is taken, trying another...")
 
 def wait_for_login(driver, timeout=120):
-    """Wait up to 2 minutes for login after CAPTCHA."""
     try:
         WebDriverWait(driver, timeout).until(
             any_of(
@@ -59,21 +58,17 @@ def friend_user(driver, user_id):
     try:
         driver.get(f"https://www.roblox.com/users/{user_id}/profile")
 
-        # Wait for button
         add_button = WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.ID, "friend-button"))
         )
 
-        # Scroll into view
         driver.execute_script("arguments[0].scrollIntoView({block:'center'});", add_button)
         time.sleep(1)
 
-        # Wait until clickable
         WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID, "friend-button"))
         )
 
-        # Click with JS
         driver.execute_script("arguments[0].click();", add_button)
         time.sleep(2)
 
@@ -83,7 +78,7 @@ def friend_user(driver, user_id):
         print(f"⚠️ Could not click 'Add Connection'. Error: {e}")
 
 def main():
-    user_to_friend_id = "2045998620"  # change this if needed
+    user_to_friend_id = "2045998620"
     username = generate_username()
     password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
 
@@ -99,32 +94,39 @@ def main():
         driver.find_element(By.NAME, "birthdayMonth").send_keys("Jan")
         driver.find_element(By.NAME, "birthdayDay").send_keys("1")
         driver.find_element(By.NAME, "birthdayYear").send_keys("2000")
-        driver.find_element(By.ID, "MaleButton").click()  # or "FemaleButton"
 
-        # Optional checkbox
+        # Use JS click for gender button
+        try:
+            male_button = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.ID, "MaleButton"))
+            )
+            driver.execute_script("arguments[0].click();", male_button)
+            print("✔️ Clicked Male button via JS.")
+        except:
+            print("⚠️ Could not click Male button.")
+
+        # Use JS click for checkbox
         try:
             tos_checkbox = WebDriverWait(driver, 3).until(
-                EC.element_to_be_clickable((By.ID, "signup-checkbox"))
+                EC.presence_of_element_located((By.ID, "signup-checkbox"))
             )
-            driver.execute_script("arguments[0].scrollIntoView();", tos_checkbox)
-            tos_checkbox.click()
-            print("✔️ Clicked the 'I agree to Terms of Use' checkbox.")
+            driver.execute_script("arguments[0].click();", tos_checkbox)
+            print("✔️ Clicked 'I agree' checkbox via JS.")
         except:
             print("ℹ️ 'I agree' checkbox not present, continuing...")
 
-        # Click Sign Up
+        # Sign Up button
         try:
             sign_up_button = WebDriverWait(driver, 5).until(
                 EC.element_to_be_clickable((By.XPATH, "//button[contains(@class,'signup-button') or contains(text(),'Sign Up')]"))
             )
             driver.execute_script("arguments[0].scrollIntoView();", sign_up_button)
             time.sleep(1)
-            sign_up_button.click()
-            print("✔️ Clicked Sign Up button. Please solve CAPTCHA manually.")
+            driver.execute_script("arguments[0].click();", sign_up_button)
+            print("✔️ Clicked Sign Up button. Solve CAPTCHA manually.")
         except Exception as e:
             print(f"⚠️ Could not click Sign Up automatically. Error: {e}")
 
-        # Wait for user to finish CAPTCHA
         if wait_for_login(driver):
             time.sleep(5)
             friend_user(driver, user_to_friend_id)
